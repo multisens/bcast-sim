@@ -1,0 +1,64 @@
+name: Build, push and bump bcast-sim in TV30
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push tv30-bcast-sim
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/tv30-bcast-sim:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/tv30-bcast-sim:latest
+
+  bump:
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out TV30
+        uses: actions/checkout@v4
+        with:
+          repository: multisens/TV30
+          token: ${{ secrets.TV30_REPO_TOKEN }}
+          submodules: false
+          fetch-depth: 0
+
+      - name: Update the bcast-sim submodule pointer
+        env:
+          SUBMODULE_SHA: ${{ github.sha }}
+        run: |
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+
+          CURRENT=$(git ls-tree HEAD bcast-sim | awk '{print $3}')
+          if [ "$CURRENT" = "$SUBMODULE_SHA" ]; then
+            echo "Pointer already at $SUBMODULE_SHA"
+            exit 0
+          fi
+
+          git update-index --cacheinfo 160000 "$SUBMODULE_SHA" bcast-sim
+          git commit -m "chore: bump submodule bcast-sim to ${SUBMODULE_SHA:0:7}"
+
+          for i in 1 2 3; do
+            if git push origin main; then exit 0; fi
+            git pull --rebase origin main
+          done
+          echo "Push failed after 3 attempts"
+          exit 1

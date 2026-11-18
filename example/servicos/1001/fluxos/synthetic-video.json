@@ -1,0 +1,31 @@
+{
+    "streamId": "synthetic-video",
+    "availabilityStartTime": "2026-01-01T00:00:00Z",
+    "segmentCount": 8,
+    "segmentTemplate": "seg-%06d.m4s",
+    "initSegment": "init.mp4",
+    "nominalDuration": 4,
+    "segmentDurations": [
+        360000,
+        360000,
+        360000,
+        360000,
+        360000,
+        360000,
+        360000,
+        360000
+    ],
+    "timescale": 90000,
+    "lapDuration": 2880000,
+    "windowSize": 5,
+    "representation": {
+        "mimeType": "video/mp4",
+        "codecs": "avc1.64001f",
+        "bandwidth": 1021772,
+        "width": 1280,
+        "height": 720,
+        "frameRate": "30"
+    },
+    "componentTag": "synthetic-video",
+    "audioStreamId": "synthetic-audio"
+}
