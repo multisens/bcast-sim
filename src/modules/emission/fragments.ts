@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Declared schemas of the signaling the emission side serves: the LLS tables
 // SLT and BAMT, the SLS fragments BALD, USBD, S-TSID and PRRD, the metadata
 // envelope and the emission descriptor (3.7, 3.8, 6.2). Each fragment is the
-// content of its root element in JSON (DP9).
+// content of its root element in JSON.
 
 const URN = /^urn:[A-Za-z0-9][A-Za-z0-9-]{0,31}:\S+$/;
 const COLOR = /^#[0-9A-Fa-f]{6}$/;

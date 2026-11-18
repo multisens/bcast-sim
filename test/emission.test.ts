@@ -57,7 +57,7 @@ test('a complete emission loads and every fragment validates against its schema 
     emissionDescriptorSchema.parse(service.descriptor);
 });
 
-test('the MPD of the SLS package is the one of the live simulator, video first (DP6)', () => {
+test('the MPD of the SLS package is the one of the live simulator, video first', () => {
     const { load: result, streams } = load(writeEmission());
     const service = loadedService(result.services.get(SERVICE_ID));
     const parts = parseMultipart(packageOf(service, streams));

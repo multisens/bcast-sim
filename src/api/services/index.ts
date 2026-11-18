@@ -3,7 +3,7 @@ import { liveRouter } from '../live';
 import { createServicesHandlers } from './controller';
 
 // Files of each service, under <emissao> (2.3): live/{streamId}/ is the live
-// simulator, restricted to the streams of the service (DP10); any other path
+// simulator, restricted to the streams of the service; any other path
 // is a file under arquivos/.
 
 export function servicesRouter(emissionDir: string, liveBaseUrl: URL): Router {

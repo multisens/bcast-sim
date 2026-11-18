@@ -97,9 +97,9 @@ export function emissionDescriptor(service: LoadedService): EmissionDescriptor |
     return service.descriptor;
 }
 
-// DP6 and DP11: generated from all the streams of the service, versioned by
-// the instant of its newest segment, in milliseconds; a ready-made MPD is
-// versioned by its modification time.
+// Generated from all the streams of the service, versioned by the instant
+// of its newest segment, in milliseconds; a ready-made MPD is versioned by
+// its modification time.
 function serviceMpd(streams: LoadedStream[], liveBaseUrl: string, nowMs: number): MpdPart | null {
     const ready = streams.length === 1 ? streams[0].manifestPaths.mpd : null;
     if (ready !== null) {

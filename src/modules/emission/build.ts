@@ -5,7 +5,7 @@ import {
 import { Bald, Bam, Bamt, EmissionDescriptor, Prrd, Slt, SltService, Stsid, StsidFile, Usbd } from './fragments';
 
 // Declarations to fragments (3.8). The icons are read by the caller and
-// passed as SVG text (DP9).
+// passed as SVG text.
 
 export type Icons = {
     appIcon: string;

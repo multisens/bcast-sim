@@ -63,7 +63,7 @@ test('master playlist joins video and audio (4.4)', () => {
     assert.match(body, /BANDWIDTH=1096000,CODECS="avc1\.64001f,mp4a\.40\.2",RESOLUTION=1280x720,FRAME-RATE=30\.000/);
 });
 
-test('MPD timeline lists exactly the available segments (4.5, DP6)', () => {
+test('MPD timeline lists exactly the available segments (4.5)', () => {
     const { video, audio } = loaded();
     assert.ok(video.media !== null && audio.media !== null);
     const nowMs = EPOCH_MS + 4150 * 1000;

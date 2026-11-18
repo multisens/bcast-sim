@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 // Environment of the service, checked at startup. Each base URL is absolute,
-// ends with '/', and its path is where the routes are mounted (DP10). The
+// ends with '/', and its path is where the routes are mounted. The
 // base URLs are also the variables a declaration can reference as ${NAME}.
 
 export type Config = {

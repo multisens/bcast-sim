@@ -154,7 +154,7 @@ export const carouselDeclarationSchema = z.strictObject({
     flows: z.array(carouselFlowSchema).min(1),
 });
 
-// 3.8: the PRRD itself, in the JSON form of DP9.
+// 3.8: the PRRD itself, in JSON.
 export const privacyDeclarationSchema = prrdSchema;
 
 export type ChannelDeclaration = z.infer<typeof channelDeclarationSchema>;

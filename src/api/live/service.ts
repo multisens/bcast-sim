@@ -91,7 +91,7 @@ export function masterPlaylist(video: LoadedStream, audio: LoadedStream): string
 }
 
 // Null when some stream has no segment available yet. The timeline of each
-// stream lists exactly its available segments (4.7, DP6), so the document
+// stream lists exactly its available segments (4.7), so the document
 // changes with each new segment of any stream. All streams share the
 // availabilityStartTime of the first one, which the loader enforces.
 export function mpd(streams: LiveMedia[], liveBaseUrl: string, nowMs: number): MpdDocument | null {
