@@ -1,0 +1,30 @@
+{
+    "slt": {
+        "serviceId": 1001,
+        "globalServiceId": "urn:sbtvd:tv3.0:service:1001",
+        "serviceCategory": 30,
+        "shortServiceName": "SINTET",
+        "majorChannelNo": 10,
+        "minorChannelNo": 1,
+        "broadbandAccessRequired": true,
+        "sltSvcSeqNum": 0,
+        "svcInetUrl": [
+            { "urlType": 1, "url": "${SIGNALING_BASE_URL}sls/1001" }
+        ]
+    },
+    "bam": {
+        "appVersion": 1,
+        "appName": "Sintetico",
+        "appDescription": "Fluxo sintetico de exemplo",
+        "backgroundColor": "#101820",
+        "foregroundColor": "#FFFFFF",
+        "appIcon": "arquivos/icone.svg",
+        "bannerIcon": "arquivos/banner.svg"
+    },
+    "delivery": {
+        "configuration": "Broadband",
+        "mainAvOverTheAir": true,
+        "receptionQuality": 80,
+        "unicastBasePatterns": ["${LIVE_BASE_URL}"]
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "bsid": 10,
+    "bandwidth": 6,
+    "bamtGroupingType": "noGrouping",
+    "services": [1001],
+    "llsCyclePeriod": 5000
+}

@@ -11,6 +11,11 @@ const BASE_URL = 'http://localhost:8082/live/';
 const T0 = BigInt(8053110000);
 const D = 360000;
 
+function mpdBody(stream: LoadedStream, nowMs: number): string | null {
+    assert.ok(stream.media !== null);
+    return mpd([{ stream, media: stream.media }], BASE_URL, nowMs)?.body ?? null;
+}
+
 function loaded(): { video: LoadedStream; audio: LoadedStream } {
     const dir = tempServicesDir();
     writeFixture(dir, videoFixture({ audioStreamId: 'audio' }));
@@ -62,7 +67,7 @@ test('MPD timeline lists exactly the available segments (4.5, DP6)', () => {
     const { video, audio } = loaded();
     assert.ok(video.media !== null && audio.media !== null);
     const nowMs = EPOCH_MS + 4150 * 1000;
-    const body = mpd(video, video.media, BASE_URL, nowMs) ?? '';
+    const body = mpdBody(video, nowMs) ?? '';
     assert.match(body, /type="dynamic"/);
     assert.match(body, /availabilityStartTime="2026-01-01T00:00:00Z" publishTime="2026-01-01T01:09:08Z"/);
     assert.match(body, /timeShiftBufferDepth="PT20S"/);
@@ -72,21 +77,21 @@ test('MPD timeline lists exactly the available segments (4.5, DP6)', () => {
     const firstTime = T0 + BigInt(1031) * BigInt(D);
     assert.match(body, new RegExp(`<S t="${firstTime}" d="360000" r="5"/>`));
     assert.match(body, /schemeIdUri="urn:sbtvd:dash:component-tag" value="video"/);
-    const audioBody = mpd(audio, audio.media, BASE_URL, nowMs) ?? '';
+    const audioBody = mpdBody(audio, nowMs) ?? '';
     assert.match(audioBody, /contentType="audio"/);
     assert.match(audioBody, /audioSamplingRate="48000"/);
     assert.doesNotMatch(audioBody, / width=/);
     assert.match(audioBody, /timeShiftBufferDepth="PT16S"/);
-    assert.equal(mpd(video, video.media, BASE_URL, EPOCH_MS + 3000), null);
+    assert.equal(mpdBody(video, EPOCH_MS + 3000), null);
 });
 
 test('MPD is the same within a segment and changes with the next one', () => {
     const { video } = loaded();
     assert.ok(video.media !== null);
     const start = EPOCH_MS + 4148 * 1000;
-    const one = mpd(video, video.media, BASE_URL, start + 500);
-    const two = mpd(video, video.media, BASE_URL, start + 3500);
-    const three = mpd(video, video.media, BASE_URL, start + 4500);
+    const one = mpdBody(video, start + 500);
+    const two = mpdBody(video, start + 3500);
+    const three = mpdBody(video, start + 4500);
     assert.equal(one, two);
     assert.notEqual(two, three);
 });
@@ -123,8 +128,8 @@ test('a restart gives byte-identical responses for the same clock', () => {
     const nowMs = EPOCH_MS + 123456789;
     assert.equal(mediaPlaylist(first.video, first.video.media, nowMs),
         mediaPlaylist(second.video, second.video.media, nowMs));
-    assert.equal(mpd(first.video, first.video.media, BASE_URL, nowMs),
-        mpd(second.video, second.video.media, BASE_URL, nowMs));
+    assert.equal(mpdBody(first.video, nowMs),
+        mpdBody(second.video, nowMs));
     const one = segment(first.video, first.video.media, 30860, nowMs);
     const two = segment(second.video, second.video.media, 30860, nowMs);
     assert.equal(one.kind, 'ok');

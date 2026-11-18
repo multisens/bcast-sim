@@ -1,0 +1,16 @@
+{
+    "signalingCyclePeriod": 3000,
+    "cycleEpoch": "2026-01-01T00:00:00Z",
+    "flows": [
+        {
+            "tsi": 10,
+            "cyclePeriod": 10000,
+            "maxExpiresDelta": 120,
+            "appContextIdList": ["urn:sbtvd:app:1001:hello"],
+            "files": [
+                { "contentLocation": "app/index.html", "contentType": "text/html" },
+                { "contentLocation": "app/style.css", "contentType": "text/css" }
+            ]
+        }
+    ]
+}

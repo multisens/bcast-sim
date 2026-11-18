@@ -4,13 +4,30 @@ import { LoadedStream } from '../../modules/streams';
 import { TimelineInput, availableFirst, diskPosition, isAvailable, lastAvailable, playlistFirst } from './timeline';
 
 // Responses of the live simulator: HLS media and master playlists (4.4), MPD
-// (4.5) and segments (4.6). Each one is a function of the declaration, the
-// files and the clock.
+// (4.5), for one stream or for all the streams of a service, and segments
+// (4.6). Each one is a function of the declaration, the files and the clock.
+
+export type LiveMedia = {
+    stream: LoadedStream;
+    media: CheckedMedia;
+};
+
+export type MpdDocument = {
+    body: string;
+    publishTimeMs: number;
+};
 
 export type SegmentResult =
     | { kind: 'ok'; body: Buffer }
     | { kind: 'not-yet' }
     | { kind: 'out-of-window' };
+
+type StreamWindow = {
+    live: LiveMedia;
+    first: number;
+    last: number;
+    publishTimeMs: number;
+};
 
 const HLS_VERSION = 6;
 const MPD_PROFILE = 'http://dashif.org/guidelines/dash-atsc-main';
@@ -73,40 +90,28 @@ export function masterPlaylist(video: LoadedStream, audio: LoadedStream): string
     return `${lines.join('\n')}\n`;
 }
 
-// Null when no segment is available yet. The timeline lists exactly the
-// available segments (4.7), so the document changes with each new segment.
-export function mpd(stream: LoadedStream, media: CheckedMedia, liveBaseUrl: string, nowMs: number): string | null {
-    const timeline = timelineOf(stream, media);
-    const last = lastAvailable(timeline, nowMs);
-    if (last < 1) {
-        return null;
+// Null when some stream has no segment available yet. The timeline of each
+// stream lists exactly its available segments (4.7, DP6), so the document
+// changes with each new segment of any stream. All streams share the
+// availabilityStartTime of the first one, which the loader enforces.
+export function mpd(streams: LiveMedia[], liveBaseUrl: string, nowMs: number): MpdDocument | null {
+    const windows: StreamWindow[] = [];
+    for (const live of streams) {
+        const timeline = timelineOf(live.stream, live.media);
+        const last = lastAvailable(timeline, nowMs);
+        if (last < 1) {
+            return null;
+        }
+        const publishTimeMs = live.stream.availabilityStartMs
+            + Math.floor(last * live.media.segmentDuration * MS_PER_SECOND / timeline.timescale);
+        windows.push({ live, first: availableFirst(timeline, last), last, publishTimeMs });
     }
-    const first = availableFirst(timeline, last);
-    const firstTime = media.firstDecodeTime + BigInt(first - 1) * BigInt(media.segmentDuration);
-    const repeat = last - first;
-    const publishTime = new Date(stream.availabilityStartMs
-        + last * media.segmentDuration * MS_PER_SECOND / timeline.timescale).toISOString().replace('.000Z', 'Z');
-    const declaration = stream.declaration;
-    const representation = declaration.representation;
-    const nominal = declaration.nominalDuration;
-    const contentType = representation.mimeType === 'video/mp4' ? 'video' : 'audio';
-    const presentationTimeOffset = media.firstDecodeTime.toString();
-
-    const representationAttributes: [string, string][] = [
-        ['id', declaration.streamId],
-        ['mimeType', representation.mimeType],
-        ['codecs', representation.codecs],
-        ['bandwidth', String(representation.bandwidth)],
-    ];
-    if (representation.width !== undefined && representation.height !== undefined
-        && representation.frameRate !== undefined) {
-        representationAttributes.push(['width', String(representation.width)]);
-        representationAttributes.push(['height', String(representation.height)]);
-        representationAttributes.push(['frameRate', representation.frameRate]);
-    }
-    if (representation.audioSamplingRate !== undefined) {
-        representationAttributes.push(['audioSamplingRate', String(representation.audioSamplingRate)]);
-    }
+    const declarations = streams.map((live) => live.stream.declaration);
+    const nominals = declarations.map((declaration) => declaration.nominalDuration);
+    const depths = declarations.map((declaration) => declaration.windowSize * declaration.nominalDuration);
+    const longest = Math.max(...nominals);
+    const publishTimeMs = Math.max(...windows.map((window) => window.publishTimeMs));
+    const publishTime = new Date(publishTimeMs).toISOString().replace('.000Z', 'Z');
 
     const lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -114,46 +119,23 @@ export function mpd(stream: LoadedStream, media: CheckedMedia, liveBaseUrl: stri
             ['xmlns', 'urn:mpeg:dash:schema:mpd:2011'],
             ['type', 'dynamic'],
             ['profiles', MPD_PROFILE],
-            ['availabilityStartTime', declaration.availabilityStartTime],
+            ['availabilityStartTime', declarations[0].availabilityStartTime],
             ['publishTime', publishTime],
-            ['minimumUpdatePeriod', isoDuration(nominal)],
-            ['timeShiftBufferDepth', isoDuration(declaration.windowSize * nominal)],
-            ['maxSegmentDuration', isoDuration(nominal)],
-            ['minBufferTime', isoDuration(nominal)],
-            ['suggestedPresentationDelay', isoDuration(PRESENTATION_DELAY_SEGMENTS * nominal)],
+            ['minimumUpdatePeriod', isoDuration(Math.min(...nominals))],
+            ['timeShiftBufferDepth', isoDuration(Math.min(...depths))],
+            ['maxSegmentDuration', isoDuration(longest)],
+            ['minBufferTime', isoDuration(longest)],
+            ['suggestedPresentationDelay', isoDuration(PRESENTATION_DELAY_SEGMENTS * longest)],
         ])}>`,
         `  <BaseURL>${escapeXml(liveBaseUrl)}</BaseURL>`,
         '  <Period id="0" start="PT0S">',
-        `    <AdaptationSet${attributes([
-            ['id', '1'],
-            ['contentType', contentType],
-            ['mimeType', representation.mimeType],
-        ])}>`,
-        `      <BaseURL>${escapeXml(declaration.streamId)}/</BaseURL>`,
-        `      <SupplementalProperty${attributes([
-            ['schemeIdUri', COMPONENT_TAG_SCHEME],
-            ['value', declaration.componentTag],
-        ])}/>`,
-        `      <RandomAccess${attributes([['type', 'closed'], ['interval', String(media.segmentDuration)]])}/>`,
-        `      <SegmentTemplate${attributes([
-            ['timescale', String(declaration.timescale)],
-            ['presentationTimeOffset', presentationTimeOffset],
-            ['startNumber', String(first)],
-            ['initialization', 'init.mp4'],
-            ['media', 'seg/$Number$.m4s'],
-        ])}>`,
-        `        <SegmentTimeline><S${attributes([
-            ['t', firstTime.toString()],
-            ['d', String(media.segmentDuration)],
-            ['r', String(repeat)],
-        ])}/></SegmentTimeline>`,
-        '      </SegmentTemplate>',
-        `      <Representation${attributes(representationAttributes)}/>`,
-        '    </AdaptationSet>',
-        '  </Period>',
-        '</MPD>',
     ];
-    return `${lines.join('\n')}\n`;
+    windows.forEach((window, index) => {
+        lines.push(...adaptationSet(window, index + 1));
+    });
+    lines.push('  </Period>');
+    lines.push('</MPD>');
+    return { body: `${lines.join('\n')}\n`, publishTimeMs };
 }
 
 export function segment(stream: LoadedStream, media: CheckedMedia, segmentNumber: number, nowMs: number):
@@ -172,6 +154,60 @@ export function segment(stream: LoadedStream, media: CheckedMedia, segmentNumber
     const sequenceDelta = position.lap * stream.declaration.segmentCount;
     const body = shiftSegment(bytes, media.segmentPatches[position.index], timeDelta, sequenceDelta);
     return { kind: 'ok', body };
+}
+
+function adaptationSet(window: StreamWindow, id: number): string[] {
+    const { stream, media } = window.live;
+    const declaration = stream.declaration;
+    const representation = declaration.representation;
+    const contentType = representation.mimeType === 'video/mp4' ? 'video' : 'audio';
+    const firstTime = media.firstDecodeTime + BigInt(window.first - 1) * BigInt(media.segmentDuration);
+    const repeat = window.last - window.first;
+
+    const representationAttributes: [string, string][] = [
+        ['id', declaration.streamId],
+        ['mimeType', representation.mimeType],
+        ['codecs', representation.codecs],
+        ['bandwidth', String(representation.bandwidth)],
+    ];
+    if (representation.width !== undefined && representation.height !== undefined
+        && representation.frameRate !== undefined) {
+        representationAttributes.push(['width', String(representation.width)]);
+        representationAttributes.push(['height', String(representation.height)]);
+        representationAttributes.push(['frameRate', representation.frameRate]);
+    }
+    if (representation.audioSamplingRate !== undefined) {
+        representationAttributes.push(['audioSamplingRate', String(representation.audioSamplingRate)]);
+    }
+
+    return [
+        `    <AdaptationSet${attributes([
+            ['id', String(id)],
+            ['contentType', contentType],
+            ['mimeType', representation.mimeType],
+        ])}>`,
+        `      <BaseURL>${escapeXml(declaration.streamId)}/</BaseURL>`,
+        `      <SupplementalProperty${attributes([
+            ['schemeIdUri', COMPONENT_TAG_SCHEME],
+            ['value', declaration.componentTag],
+        ])}/>`,
+        `      <RandomAccess${attributes([['type', 'closed'], ['interval', String(media.segmentDuration)]])}/>`,
+        `      <SegmentTemplate${attributes([
+            ['timescale', String(declaration.timescale)],
+            ['presentationTimeOffset', media.firstDecodeTime.toString()],
+            ['startNumber', String(window.first)],
+            ['initialization', 'init.mp4'],
+            ['media', 'seg/$Number$.m4s'],
+        ])}>`,
+        `        <SegmentTimeline><S${attributes([
+            ['t', firstTime.toString()],
+            ['d', String(media.segmentDuration)],
+            ['r', String(repeat)],
+        ])}/></SegmentTimeline>`,
+        '      </SegmentTemplate>',
+        `      <Representation${attributes(representationAttributes)}/>`,
+        '    </AdaptationSet>',
+    ];
 }
 
 function frameRateValue(representation: Representation): number {

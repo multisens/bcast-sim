@@ -1,6 +1,6 @@
 # Broadcaster side simulator. Build context: this repository.
-# The services directory defaults to the bundled example; mount another one
-# over /app/example/servicos, or set SERVICES_DIR.
+# The emission directory (canais/ and servicos/) defaults to the bundled
+# example; mount another one over /app/example, or set EMISSION_DIR.
 
 FROM node:23-alpine AS builder
 WORKDIR /app
@@ -13,7 +13,7 @@ FROM node:23-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8082
-ENV SERVICES_DIR=/app/example/servicos
+ENV EMISSION_DIR=/app/example
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist

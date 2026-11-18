@@ -1,20 +1,61 @@
 # bcast-sim
 
 Broadcaster side of the TV 3.0 AoP testbed. It simulates what a broadcaster
-emits: the live streams of each service and, in later milestones, the
-transport layer signaling. It is outside the platform: the platform reaches it
-over HTTP only.
+emits: the transport layer signaling of each service, its live streams and
+its files. It is outside the platform: the platform reaches it over HTTP only.
 
 This repository holds the engine. The services it serves are declarations and
-files under a services directory; `example/servicos` holds a synthetic one.
+files under an emission directory; `example/` holds a synthetic one.
 
 ## Parts
 
 | Part | Where | Runs |
 |---|---|---|
+| Signaling routes | `src/api/signaling`, `src/modules/emission` | in the service |
+| Service files | `src/api/services` | in the service |
 | Live simulator | `src/api/live`, `src/modules/streams` | in the service |
 | Content preparation tool | `src/prepare` | from the command line, once per source file |
-| ISO BMFF reading and stream checks | `src/media` | shared by both |
+| ISO BMFF reading and stream checks | `src/media` | shared by the live simulator and the tool |
+
+## Emission directory
+
+```
+canais/{bsid}.json                     RF channel: bandwidth, BAMT grouping, services
+servicos/{serviceId}/
+    servico.json                       SLT entry, BAM and delivery
+    aplicacao.json                     Entry Packages of the BALD (optional)
+    carrossel.json                     broadcast carousel (optional)
+    privacidade.json                   PRRD (optional)
+    fluxos/{streamId}.json             stream declarations
+    segmentos/{streamId}/              initialization and media segments
+    arquivos/                          application files and icons
+```
+
+Every declaration has a schema; a declaration that fails it, or a rule that
+crosses files, is not served, and the reason goes to the log. A service
+belongs to exactly one channel and has at least one stream: one MPD joins all
+the streams of the service.
+
+## Signaling routes
+
+| Route | Returns |
+|---|---|
+| `GET <signaling>/lls` | SLT and BAMT of every RF channel, in JSON |
+| `GET <signaling>/lls?rf={bsid}` | the tables of one RF channel |
+| `GET <signaling>/sls/{serviceId}` | `multipart/related`: the metadata envelope, then USBD, S-TSID, MPD, BALD and PRRD, as declared |
+| `GET <signaling>/emission/{serviceId}` | emission descriptor of a service with a carousel |
+
+The fragments are JSON, field by field with the names of the standard; only
+the MPD is XML. A fragment version changes only when its content changes. The
+MPD lists the available segments of each stream, so it changes with every new
+segment; the SLS package answers `503` before the first one.
+
+## Service files
+
+| Route | Returns |
+|---|---|
+| `GET <services>/{serviceId}/live/{streamId}/…` | the live routes below, for the streams of that service |
+| `GET <services>/{serviceId}/{path}` | `servicos/{serviceId}/arquivos/{path}` |
 
 ## Live simulator
 
@@ -26,31 +67,43 @@ clock; two instances with the same inputs answer the same bytes.
 |---|---|
 | `GET <live>/{streamId}/master.m3u8` | HLS master playlist, for a video stream with an `audioStreamId` |
 | `GET <live>/{streamId}/playlist.m3u8` | HLS media playlist of the current window |
-| `GET <live>/{streamId}/mpd` | DASH MPD whose segment timeline lists the available segments |
+| `GET <live>/{streamId}/mpd` | DASH MPD of the stream, whose segment timeline lists the available segments |
 | `GET <live>/{streamId}/init.mp4` | initialization segment |
 | `GET <live>/{streamId}/seg/{n}.m4s` | segment number `n`, with its decode times shifted onto the continuous timeline |
 
-`<live>` is `LIVE_BASE_URL`. Before the first segment is available the window
-routes answer `503` with `Retry-After`; a segment outside the window answers
-`404`.
+Before the first segment is available the window routes answer `503` with
+`Retry-After`; a segment outside the window answers `404`. Changing the
+segments of a stream requires a new `availabilityStartTime`; otherwise the
+previous declaration stays.
 
-### Environment
+## Environment
 
 | Variable | Meaning |
 |---|---|
 | `PORT` | HTTP port |
-| `SERVICES_DIR` | services directory: `{serviceId}/fluxos/{streamId}.json` and `{serviceId}/segmentos/{streamId}/` |
-| `LIVE_BASE_URL` | absolute base URL of the live routes as players reach it, ending in `/`; its path is where the routes are mounted |
+| `EMISSION_DIR` | emission directory, with `canais/` and `servicos/` |
+| `LIVE_BASE_URL` | `<live>`, as players reach it; it is the `MPD.BaseURL` |
+| `SERVICES_BASE_URL` | `<services>`, as the platform reaches it; base of the emission descriptor |
+| `SIGNALING_BASE_URL` | `<signaling>`, as the platform reaches it |
+| `PUBLIC_SERVICES_BASE_URL` | `<services>`, as browsers reach it; same path as `SERVICES_BASE_URL` |
 | `LOG_LEVEL` | `ERROR`, `INFO` (default) or `DEBUG` |
 
-Declarations are loaded at startup and again when a file under
-`SERVICES_DIR` changes. A declaration that fails a check is not served and the
-reason goes to the log. Changing the segments of a stream requires a new
-`availabilityStartTime`; otherwise the previous declaration stays.
+Each base URL is absolute and ends in `/`; its path is where the routes are
+mounted, and the paths of live, services and signaling differ. Declarations
+are loaded at startup and again when a file under `EMISSION_DIR` changes.
+
+A declaration can reference the four base URLs as `${LIVE_BASE_URL}`,
+`${SERVICES_BASE_URL}`, `${SIGNALING_BASE_URL}` and
+`${PUBLIC_SERVICES_BASE_URL}`; any other name refuses the declaration. A
+service in the `Broadband` configuration must list `LIVE_BASE_URL` in its
+`unicastBasePatterns`; the example declares `${LIVE_BASE_URL}`.
 
 ```sh
 npm install
-PORT=8082 SERVICES_DIR=example/servicos LIVE_BASE_URL=http://localhost:8082/live/ npm run dev
+PORT=8082 EMISSION_DIR=example LIVE_BASE_URL=http://localhost:8082/live/ \
+    SERVICES_BASE_URL=http://localhost:8082/services/ \
+    SIGNALING_BASE_URL=http://localhost:8082/signaling/ \
+    PUBLIC_SERVICES_BASE_URL=http://localhost:8082/services/ npm run dev
 ```
 
 ## Content preparation tool
@@ -67,6 +120,8 @@ npm run prepare-content -- --source <file> --services-dir <dir> --service-id <id
     [--audio-bitrate 128k] [--audio-frame-size 1024]
 ```
 
+`--services-dir` is the `servicos/` of an emission directory.
+
 The lap is the longest multiple of the common unit of the video and audio
 frame durations that fits the source; each component gets the segment
 duration closest to `--segment-duration` that divides the lap. The tool
@@ -74,17 +129,20 @@ checks the result with the same checks the live simulator applies and writes
 no declaration if any fails. Without `--availability-start`, the epoch is the
 current time.
 
-`scripts/make-example.sh` regenerates `example/servicos/1001` from a synthetic
-test pattern with a frame counter and a beep every second.
+`scripts/make-example.sh` regenerates the streams of `example/servicos/1001`
+from a synthetic test pattern with a frame counter and a beep every second.
 
 ## Container
 
 ```sh
 docker build -t tv30-bcast-sim .
-docker run --rm -p 8082:8082 -e LIVE_BASE_URL=http://localhost:8082/live/ tv30-bcast-sim
+docker run --rm -p 8082:8082 -e LIVE_BASE_URL=http://localhost:8082/live/ \
+    -e SERVICES_BASE_URL=http://localhost:8082/services/ \
+    -e SIGNALING_BASE_URL=http://localhost:8082/signaling/ \
+    -e PUBLIC_SERVICES_BASE_URL=http://localhost:8082/services/ tv30-bcast-sim
 ```
 
-The image bundles `example/servicos` as the default services directory.
+The image bundles `example/` as the default emission directory.
 
 ## Tests
 

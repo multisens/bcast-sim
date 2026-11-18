@@ -70,14 +70,14 @@ export function createLiveHandlers(liveBaseUrl: URL): LiveHandlers {
                 return;
             }
             const nowMs = Date.now();
-            const body = mpd(stream, stream.media, liveBaseUrl.href, nowMs);
-            if (body === null) {
+            const document = mpd([{ stream, media: stream.media }], liveBaseUrl.href, nowMs);
+            if (document === null) {
                 notYet(res, secondsUntilFirstSegment(timelineOf(stream, stream.media), nowMs));
                 return;
             }
             res.set('Content-Type', MPD_TYPE);
             res.set('Cache-Control', 'no-cache');
-            res.send(Buffer.from(body));
+            res.send(Buffer.from(document.body));
         },
 
         init: (req: Request, res: Response): void => {

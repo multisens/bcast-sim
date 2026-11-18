@@ -1,0 +1,15 @@
+body {
+    margin: 0;
+    background: transparent;
+}
+
+.greeting {
+    position: absolute;
+    left: 5%;
+    bottom: 10%;
+    padding: 0.5em 1em;
+    color: #ffffff;
+    background: rgba(16, 24, 32, 0.8);
+    font-family: sans-serif;
+    font-size: 2em;
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "appContextId": "urn:sbtvd:app:1001:hello",
+        "appType": "TV30-Ginga-HTML5",
+        "appId": "urn:sbtvd:app:1001:hello",
+        "appName": "Ola",
+        "controlCode": "AUTOSTART",
+        "bbandEntryPointUrl": "${PUBLIC_SERVICES_BASE_URL}1001/app/index.html"
+    }
+]
