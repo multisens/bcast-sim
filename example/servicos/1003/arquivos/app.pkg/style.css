@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    background: transparent;
+}
+
+.panel {
+    position: absolute;
+    left: 5%;
+    bottom: 10%;
+    padding: 0.5em 1em;
+    color: #ffffff;
+    background: rgba(32, 24, 16, 0.8);
+    font-family: sans-serif;
+}
+
+.title {
+    font-size: 2em;
+}
+
+.status {
+    font-size: 1.4em;
+}

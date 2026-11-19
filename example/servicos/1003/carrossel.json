@@ -1,0 +1,55 @@
+{
+    "signalingCyclePeriod": 3000,
+    "cycleEpoch": "2026-01-01T00:00:00Z",
+    "flows": [
+        {
+            "tsi": 10,
+            "cyclePeriod": 10000,
+            "maxExpiresDelta": 120,
+            "files": [
+                {
+                    "contentLocation": "app.pkg",
+                    "contentType": "multipart/related"
+                }
+            ]
+        },
+        {
+            "tsi": 12,
+            "cyclePeriod": 1000,
+            "fileTemplate": "live/stored-video/seg/$TOI$.m4s",
+            "files": [
+                {
+                    "contentLocation": "live/stored-video/init.mp4",
+                    "contentType": "video/mp4"
+                }
+            ]
+        },
+        {
+            "tsi": 13,
+            "cyclePeriod": 20000,
+            "maxExpiresDelta": 15,
+            "files": [
+                {
+                    "contentLocation": "aviso.txt",
+                    "contentType": "text/plain",
+                    "lastModified": "2026-06-01T00:00:00Z"
+                },
+                {
+                    "contentLocation": "marca.txt",
+                    "contentType": "text/plain"
+                }
+            ]
+        },
+        {
+            "tsi": 14,
+            "cyclePeriod": 1000,
+            "fileTemplate": "live/stored-audio/seg/$TOI$.m4s",
+            "files": [
+                {
+                    "contentLocation": "live/stored-audio/init.mp4",
+                    "contentType": "audio/mp4"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "streamId": "stored-audio",
+    "availabilityStartTime": "2026-01-01T00:00:00Z",
+    "segmentCount": 10,
+    "segmentTemplate": "seg-%06d.m4s",
+    "initSegment": "init.mp4",
+    "nominalDuration": 3.2,
+    "segmentDurations": [
+        153600,
+        153600,
+        153600,
+        153600,
+        153600,
+        153600,
+        153600,
+        153600,
+        153600,
+        153600
+    ],
+    "timescale": 48000,
+    "lapDuration": 1536000,
+    "windowSize": 5,
+    "representation": {
+        "mimeType": "audio/mp4",
+        "codecs": "mp4a.40.2",
+        "bandwidth": 97483,
+        "audioSamplingRate": 48000
+    },
+    "componentTag": "stored-audio"
+}

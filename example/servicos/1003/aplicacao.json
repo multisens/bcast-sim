@@ -1,0 +1,15 @@
+[
+    {
+        "appContextId": "urn:sbtvd:app:1003:guardada",
+        "appType": "TV30-Ginga-HTML5",
+        "appId": "urn:sbtvd:app:1003:guardada",
+        "appName": "Guardada",
+        "controlCode": "STORED_AUTOSTART",
+        "bcastEntryPackageUrl": "app.pkg",
+        "bcastEntryPointUrl": "index.html",
+        "lctTSIRef": [
+            10,
+            13
+        ]
+    }
+]

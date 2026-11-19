@@ -4,7 +4,8 @@
     "bamtGroupingType": "noGrouping",
     "services": [
         1001,
-        1002
+        1002,
+        1003
     ],
     "llsCyclePeriod": 5000
 }
