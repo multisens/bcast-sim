@@ -120,8 +120,10 @@ export function buildUsbd(service: ServiceDeclaration): Usbd | null {
 }
 
 // Only what ATSC A/331, A.3.3.2, defines: cyclePeriod, order and
-// lastModified go to the emission descriptor (3.6).
-export function buildStsid(carousel: CarouselDeclaration): Stsid {
+// lastModified go to the emission descriptor (3.6). The appContextIdList of
+// a flow also has the appContextId of each entry whose lctTSIRef lists it
+// (ABNT NBR 25608, 10.1).
+export function buildStsid(carousel: CarouselDeclaration, application: ApplicationDeclaration | null): Stsid {
     return {
         RS: [{
             LS: carousel.flows.map((flow) => ({
@@ -130,7 +132,7 @@ export function buildStsid(carousel: CarouselDeclaration): Stsid {
                     EFDT: {
                         'FDT-Instance': {
                             maxExpiresDelta: flow.maxExpiresDelta,
-                            appContextIdList: flow.appContextIdList,
+                            appContextIdList: flowAppContextIds(flow, application),
                             fileTemplate: flow.fileTemplate,
                             filterCodes: flow.filterCodes,
                             File: flow.files.map(stsidFile),
@@ -163,6 +165,19 @@ export function buildEmissionDescriptor(serviceId: number, carousel: CarouselDec
             objects: descriptorObjects(flow, carousel.cycleEpoch),
         })),
     };
+}
+
+// The appContextIdList of the flow, then the appContextId of each entry
+// whose lctTSIRef lists the flow, without repetition; undefined when empty.
+function flowAppContextIds(flow: CarouselFlow, application: ApplicationDeclaration | null): string[] | undefined {
+    const ids = [...(flow.appContextIdList ?? [])];
+    for (const entry of application ?? []) {
+        const listed = entry.lctTSIRef?.includes(flow.tsi) ?? false;
+        if (listed && !ids.includes(entry.appContextId)) {
+            ids.push(entry.appContextId);
+        }
+    }
+    return ids.length === 0 ? undefined : ids;
 }
 
 function stsidFile(file: CarouselFlow['files'][number]): StsidFile {

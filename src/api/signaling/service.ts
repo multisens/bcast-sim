@@ -37,6 +37,9 @@ const BOUNDARY_PREFIX = 'sls-';
 const BOUNDARY_HASH_LENGTH = 16;
 const MS_PER_SECOND = 1000;
 const PACKAGE_ORDER: MetadataUri[] = ['usbd', 'stsid', 'mpd', 'bald', 'prrd'];
+// MPD.BaseURL of a service whose carousel carries its streams: relative,
+// resolved against the object proxy (5.4, DP22).
+const BROADCAST_LIVE_BASE = '/live/';
 
 export function llsResponse(channels: LoadedChannel[]): LlsResponse {
     return {
@@ -66,7 +69,8 @@ export function llsResponse(channels: LoadedChannel[]): LlsResponse {
 // yet when a stream of the service has no segment available.
 export function slsPackage(service: LoadedService, streams: LoadedStream[], liveBaseUrl: string, nowMs: number):
     SlsResult {
-    const mpdPart = serviceMpd(streams, liveBaseUrl, nowMs);
+    const baseUrl = service.carriesStreams ? BROADCAST_LIVE_BASE : liveBaseUrl;
+    const mpdPart = serviceMpd(streams, baseUrl, nowMs);
     if (mpdPart === null) {
         return { kind: 'not-yet' };
     }

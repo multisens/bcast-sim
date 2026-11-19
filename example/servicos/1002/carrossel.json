@@ -1,0 +1,54 @@
+{
+    "signalingCyclePeriod": 3000,
+    "cycleEpoch": "2026-01-01T00:00:00Z",
+    "flows": [
+        {
+            "tsi": 10,
+            "cyclePeriod": 10000,
+            "maxExpiresDelta": 120,
+            "files": [
+                {
+                    "contentLocation": "app.pkg",
+                    "contentType": "multipart/related"
+                }
+            ]
+        },
+        {
+            "tsi": 12,
+            "cyclePeriod": 4000,
+            "fileTemplate": "live/broadcast-video/seg/$TOI$.m4s",
+            "files": [
+                {
+                    "contentLocation": "live/broadcast-video/init.mp4",
+                    "contentType": "video/mp4"
+                }
+            ]
+        },
+        {
+            "tsi": 13,
+            "cyclePeriod": 20000,
+            "maxExpiresDelta": 15,
+            "files": [
+                {
+                    "contentLocation": "aviso.txt",
+                    "contentType": "text/plain"
+                },
+                {
+                    "contentLocation": "marca.txt",
+                    "contentType": "text/plain"
+                }
+            ]
+        },
+        {
+            "tsi": 14,
+            "cyclePeriod": 4000,
+            "fileTemplate": "live/broadcast-audio/seg/$TOI$.m4s",
+            "files": [
+                {
+                    "contentLocation": "live/broadcast-audio/init.mp4",
+                    "contentType": "audio/mp4"
+                }
+            ]
+        }
+    ]
+}

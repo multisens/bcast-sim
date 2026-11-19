@@ -10,6 +10,7 @@ import {
 // the streams, whenever a file under the emission directory changes.
 
 export { EmissionBases } from './build';
+export { EntryPackage, buildEntryPackage } from './entry-package';
 export * from './fragments';
 export {
     EmissionContext, EmissionLoad, LoadedChannel, LoadedService, StaticMetadataUri, VersionRecord, Versioned,

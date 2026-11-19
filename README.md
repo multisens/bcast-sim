@@ -50,12 +50,23 @@ the MPD is XML. A fragment version changes only when its content changes. The
 MPD lists the available segments of each stream, so it changes with every new
 segment; the SLS package answers `503` before the first one.
 
+In the S-TSID, the `appContextIdList` of a flow also has the `appContextId` of
+each Entry Package whose `lctTSIRef` lists that flow. When the carousel has a
+flow with a `fileTemplate` under `live/`, the MPD has `MPD.BaseURL` `/live/`,
+relative, to be resolved against the object proxy; otherwise it is the
+absolute `LIVE_BASE_URL`.
+
 ## Service files
 
 | Route | Returns |
 |---|---|
 | `GET <services>/{serviceId}/live/{streamId}/…` | the live routes below, for the streams of that service |
 | `GET <services>/{serviceId}/{path}` | `servicos/{serviceId}/arquivos/{path}` |
+| `GET <services>/{serviceId}/{p}`, `{p}` an entry package of the carousel | `multipart/related`: a part per file of `arquivos/{p}/`, with `Content-Location` relative to it |
+
+A carousel file of `contentType` `multipart/related` is an entry package (ATSC
+A/331, A.3.3.4): `arquivos/{p}/` must be a folder with files of known media
+type; each part has `Content-Transfer-Encoding: binary`.
 
 ## Live simulator
 
@@ -129,8 +140,12 @@ checks the result with the same checks the live simulator applies and writes
 no declaration if any fails. Without `--availability-start`, the epoch is the
 current time.
 
-`scripts/make-example.sh` regenerates the streams of `example/servicos/1001`
-from a synthetic test pattern with a frame counter and a beep every second.
+`scripts/make-example.sh [1001|1002]` regenerates the streams of the example
+services from a synthetic test pattern with the service number, a frame
+counter and a beep every second. 1001 is broadband only, with its application
+on `bbandEntryPointUrl`; 1002 is broadcast only, with its stream and its
+application (an entry package) in the carousel, and a file whose
+`maxExpiresDelta` is shorter than its `cyclePeriod`.
 
 ## Container
 

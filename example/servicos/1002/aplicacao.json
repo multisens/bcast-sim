@@ -1,0 +1,15 @@
+[
+    {
+        "appContextId": "urn:sbtvd:app:1002:carrossel",
+        "appType": "TV30-Ginga-HTML5",
+        "appId": "urn:sbtvd:app:1002:carrossel",
+        "appName": "Carrossel",
+        "controlCode": "AUTOSTART",
+        "bcastEntryPackageUrl": "app.pkg",
+        "bcastEntryPointUrl": "index.html",
+        "lctTSIRef": [
+            10,
+            13
+        ]
+    }
+]

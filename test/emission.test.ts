@@ -20,6 +20,7 @@ type Part = {
     body: string;
 };
 
+const BROADCAST_LIVE_BASE = '/live/';
 const EPOCH_MS = Date.parse('2026-01-01T00:00:00Z');
 const NOW_MS = EPOCH_MS + 4150 * 1000;
 
@@ -64,13 +65,27 @@ test('the MPD of the SLS package is the one of the live simulator, video first',
     const part = parts.find((candidate) => candidate.headers.get('content-location') === 'mpd');
     const video = liveMedia(streams, 'video');
     const audio = liveMedia(streams, 'audio');
-    const expected = mpd([video, audio], LIVE_BASE_URL, NOW_MS);
+    const expected = mpd([video, audio], BROADCAST_LIVE_BASE, NOW_MS);
     assert.ok(expected !== null);
     assert.equal(part?.body, expected.body);
     const envelope = envelopeSchema.parse(JSON.parse(parts[0].body));
     const item = envelope.item.find((candidate) => candidate.metadataURI === 'mpd');
     assert.equal(item?.version, expected.publishTimeMs);
     assert.ok((part?.body ?? '').indexOf('contentType="video"') < (part?.body ?? '').indexOf('contentType="audio"'));
+});
+
+test('the MPD.BaseURL is relative only when the carousel carries the streams (DP22)', () => {
+    const emissionDir = writeEmission();
+    const { load: carried, streams } = load(emissionDir);
+    const carriedMpd = mpdPartOf(packageOf(loadedService(carried.services.get(SERVICE_ID)), streams));
+    assert.match(carriedMpd, /<BaseURL>\/live\/<\/BaseURL>/);
+
+    const carousel = carouselDeclaration();
+    carousel.flows = (carousel.flows as Record<string, unknown>[]).slice(0, 1);
+    writeJson(path.join(serviceDirOf(emissionDir), 'carrossel.json'), carousel, 1);
+    const { load: notCarried } = load(emissionDir);
+    const notCarriedMpd = mpdPartOf(packageOf(loadedService(notCarried.services.get(SERVICE_ID)), streams));
+    assert.ok(notCarriedMpd.includes(`<BaseURL>${LIVE_BASE_URL}</BaseURL>`));
 });
 
 test('the SLS package is not available before the first segment', () => {
@@ -232,6 +247,11 @@ function packageOf(service: LoadedService, streams: Map<string, LoadedStream>): 
         throw new Error('no package');
     }
     return result.package;
+}
+
+function mpdPartOf(pkg: { contentType: string; body: string }): string {
+    const part = parseMultipart(pkg).find((candidate) => candidate.headers.get('content-location') === 'mpd');
+    return part?.body ?? '';
 }
 
 function liveMedia(streams: Map<string, LoadedStream>, streamId: string):

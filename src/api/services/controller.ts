@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import logger from '../../logger';
-import { filesDirOfLoaded } from '../../modules/emission';
+import path from 'path';
+import { EntryPackage, buildEntryPackage, filesDirOfLoaded, getService } from '../../modules/emission';
 
-// Handler of the files of a service, under <emissao>/{serviceId} (2.3).
+// Handler of the files of a service, under <emissao>/{serviceId} (2.3); an
+// entry package of the carousel is built from its folder (3.8).
 
 type Handler = (req: Request, res: Response) => void;
 
@@ -24,7 +26,12 @@ export function createServicesHandlers(emissionDir: string): ServicesHandlers {
                 res.sendStatus(404);
                 return;
             }
-            res.sendFile(segments.join('/'), { root: dir, dotfiles: 'deny' }, (error?: Error) => {
+            const location = segments.join('/');
+            if (getService(Number(serviceId))?.entryPackages.has(location)) {
+                sendEntryPackage(res, path.join(dir, location));
+                return;
+            }
+            res.sendFile(location, { root: dir, dotfiles: 'deny' }, (error?: Error) => {
                 if (error === undefined || res.headersSent) {
                     return;
                 }
@@ -37,4 +44,17 @@ export function createServicesHandlers(emissionDir: string): ServicesHandlers {
             });
         },
     };
+}
+
+function sendEntryPackage(res: Response, dir: string): void {
+    let entryPackage: EntryPackage;
+    try {
+        entryPackage = buildEntryPackage(dir);
+    }
+    catch (error) {
+        logger.error(`entry package not built: ${(error as Error).message}`);
+        res.sendStatus(500);
+        return;
+    }
+    res.type(entryPackage.contentType).send(entryPackage.body);
 }

@@ -7,7 +7,7 @@ import {
     buildUsbd,
 } from './build';
 import {
-    ApplicationDeclaration, CarouselDeclaration, ChannelDeclaration, DEFAULT_LLS_CYCLE_PERIOD_MS, PrivacyDeclaration,
+    ApplicationDeclaration, CarouselDeclaration, CarouselFlow, ChannelDeclaration, DEFAULT_LLS_CYCLE_PERIOD_MS, PrivacyDeclaration,
     ServiceDeclaration, applicationDeclarationSchema, carouselDeclarationSchema, channelDeclarationSchema,
     privacyDeclarationSchema, serviceDeclarationSchema,
 } from './declarations';
@@ -15,6 +15,7 @@ import {
     Bam, Bamt, EmissionDescriptor, MetadataUri, Slt, baldSchema, bamtSchema, emissionDescriptorSchema, prrdSchema,
     sltSchema, stsidSchema, svgSchema, usbdSchema,
 } from './fragments';
+import { PACKAGE_TYPE, packageLocations } from './entry-package';
 
 // Load of the emission declarations (3.2 to 3.6, 3.8): reads canais/ and
 // servicos/, checks each declaration and the rules that cross them, builds
@@ -51,6 +52,10 @@ export type LoadedService = {
     bsid: number;
     fragments: Map<StaticMetadataUri, Versioned<unknown>>;
     descriptor: EmissionDescriptor | null;
+    // contentLocation of each entry package of the carousel (3.8).
+    entryPackages: Set<string>;
+    // The carousel has a flow with a fileTemplate under live/ (DP22).
+    carriesStreams: boolean;
 };
 
 export type EmissionContext = {
@@ -183,7 +188,8 @@ export function loadEmission(context: EmissionContext, previous: Map<string, Ver
             }
             const descriptor = files.carousel === null ? null
                 : emissionDescriptorSchema.parse(buildEmissionDescriptor(serviceId, files.carousel, context.bases));
-            services.set(serviceId, { serviceId, bsid, fragments, descriptor });
+            services.set(serviceId, { serviceId, bsid, fragments, descriptor,
+                entryPackages: entryPackagesOf(files.carousel), carriesStreams: carriesStreams(files.carousel) });
         }
         catch (error) {
             refusals.push({ source: files.dir, reason: `built fragments fail their schema: ${errorMessage(error)}` });
@@ -213,6 +219,23 @@ export function nextVersion(previous: VersionRecord | undefined, content: string
     return { content, version };
 }
 
+function entryPackagesOf(carousel: CarouselDeclaration | null): Set<string> {
+    const locations = (carousel?.flows ?? []).flatMap((flow) => flow.files.filter(isEntryPackage)
+        .map((file) => file.contentLocation));
+    return new Set(locations);
+}
+
+function carriesStreams(carousel: CarouselDeclaration | null): boolean {
+    return (carousel?.flows ?? []).some((flow) => flow.fileTemplate !== undefined
+        && LIVE_PATH.test(flow.fileTemplate));
+}
+
+// DP18: a file of type multipart/related is an entry package, built from the
+// folder of the same name.
+function isEntryPackage(file: CarouselFlow['files'][number]): boolean {
+    return file.contentType === PACKAGE_TYPE;
+}
+
 function staticFragments(files: ServiceFiles): Map<StaticMetadataUri, { content: unknown; sources: string[] }> {
     const fragments = new Map<StaticMetadataUri, { content: unknown; sources: string[] }>();
     const usbd = buildUsbd(files.declaration);
@@ -220,8 +243,8 @@ function staticFragments(files: ServiceFiles): Map<StaticMetadataUri, { content:
         fragments.set('usbd', { content: usbdSchema.parse(usbd), sources: files.sources.service });
     }
     if (files.carousel !== null) {
-        fragments.set('stsid', { content: stsidSchema.parse(buildStsid(files.carousel)),
-            sources: files.sources.carousel });
+        fragments.set('stsid', { content: stsidSchema.parse(buildStsid(files.carousel, files.application)),
+            sources: [...files.sources.carousel, ...files.sources.application] });
     }
     if (files.application !== null) {
         fragments.set('bald', { content: baldSchema.parse(buildBald(files.application, files.appIcons)),
@@ -401,7 +424,15 @@ function checkCarousel(carousel: CarouselDeclaration, dir: string, streams: Load
                 }
                 continue;
             }
-            if (!fs.existsSync(path.join(dir, FILES_DIR, location))) {
+            const filePath = path.join(dir, FILES_DIR, location);
+            if (isEntryPackage(file)) {
+                if (!fs.existsSync(filePath) || !fs.statSync(filePath).isDirectory()) {
+                    throw new Error(`entry package '${location}' is not a folder under ${FILES_DIR}/`);
+                }
+                packageLocations(filePath);
+                continue;
+            }
+            if (!fs.existsSync(filePath)) {
                 throw new Error(`contentLocation '${location}' does not exist under ${FILES_DIR}/`);
             }
         }

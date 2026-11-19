@@ -1,0 +1,26 @@
+{
+    "slt": {
+        "serviceId": 1002,
+        "globalServiceId": "urn:sbtvd:tv3.0:service:1002",
+        "serviceCategory": 30,
+        "shortServiceName": "RADIOD",
+        "majorChannelNo": 10,
+        "minorChannelNo": 2,
+        "broadbandAccessRequired": false,
+        "sltSvcSeqNum": 0
+    },
+    "bam": {
+        "appVersion": 1,
+        "appName": "Radiodifusao",
+        "appDescription": "Servico de exemplo so pelo ar",
+        "backgroundColor": "#201810",
+        "foregroundColor": "#FFFFFF",
+        "appIcon": "arquivos/icone.svg",
+        "bannerIcon": "arquivos/banner.svg"
+    },
+    "delivery": {
+        "configuration": "Broadcast",
+        "mainAvOverTheAir": true,
+        "receptionQuality": 70
+    }
+}
