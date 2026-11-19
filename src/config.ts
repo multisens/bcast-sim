@@ -15,9 +15,6 @@ export type Config = {
     servicesBaseUrl: URL;
     // <sinal>, as the platform reaches it.
     signalingBaseUrl: URL;
-    // <emissao>, as players and browsers reach it; same path as
-    // servicesBaseUrl.
-    publicServicesBaseUrl: URL;
 };
 
 export function readConfig(env: NodeJS.ProcessEnv): Config {
@@ -32,15 +29,11 @@ export function readConfig(env: NodeJS.ProcessEnv): Config {
     const liveBaseUrl = baseUrl(env, 'LIVE_BASE_URL');
     const servicesBaseUrl = baseUrl(env, 'SERVICES_BASE_URL');
     const signalingBaseUrl = baseUrl(env, 'SIGNALING_BASE_URL');
-    const publicServicesBaseUrl = baseUrl(env, 'PUBLIC_SERVICES_BASE_URL');
-    if (publicServicesBaseUrl.pathname !== servicesBaseUrl.pathname) {
-        throw new Error('PUBLIC_SERVICES_BASE_URL and SERVICES_BASE_URL need the same path');
-    }
     const mounts = [liveBaseUrl.pathname, servicesBaseUrl.pathname, signalingBaseUrl.pathname];
     if (new Set(mounts).size !== mounts.length) {
         throw new Error(`LIVE_BASE_URL, SERVICES_BASE_URL and SIGNALING_BASE_URL need distinct paths; got ${mounts}`);
     }
-    return { port, emissionDir, liveBaseUrl, servicesBaseUrl, signalingBaseUrl, publicServicesBaseUrl };
+    return { port, emissionDir, liveBaseUrl, servicesBaseUrl, signalingBaseUrl };
 }
 
 export function declarationVariables(config: Config): Map<string, string> {
@@ -48,7 +41,6 @@ export function declarationVariables(config: Config): Map<string, string> {
         ['LIVE_BASE_URL', config.liveBaseUrl.href],
         ['SERVICES_BASE_URL', config.servicesBaseUrl.href],
         ['SIGNALING_BASE_URL', config.signalingBaseUrl.href],
-        ['PUBLIC_SERVICES_BASE_URL', config.publicServicesBaseUrl.href],
     ]);
 }
 

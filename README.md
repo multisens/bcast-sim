@@ -96,25 +96,23 @@ previous declaration stays.
 | `LIVE_BASE_URL` | `<live>`, as players reach it; it is the `MPD.BaseURL` |
 | `SERVICES_BASE_URL` | `<services>`, as the platform reaches it; base of the emission descriptor |
 | `SIGNALING_BASE_URL` | `<signaling>`, as the platform reaches it |
-| `PUBLIC_SERVICES_BASE_URL` | `<services>`, as browsers reach it; same path as `SERVICES_BASE_URL` |
 | `LOG_LEVEL` | `ERROR`, `INFO` (default) or `DEBUG` |
 
 Each base URL is absolute and ends in `/`; its path is where the routes are
 mounted, and the paths of live, services and signaling differ. Declarations
 are loaded at startup and again when a file under `EMISSION_DIR` changes.
 
-A declaration can reference the four base URLs as `${LIVE_BASE_URL}`,
-`${SERVICES_BASE_URL}`, `${SIGNALING_BASE_URL}` and
-`${PUBLIC_SERVICES_BASE_URL}`; any other name refuses the declaration. A
-service in the `Broadband` configuration must list `LIVE_BASE_URL` in its
-`unicastBasePatterns`; the example declares `${LIVE_BASE_URL}`.
+A declaration can reference the three base URLs as `${LIVE_BASE_URL}`,
+`${SERVICES_BASE_URL}` and `${SIGNALING_BASE_URL}`; any other name refuses
+the declaration. A service in the `Broadband` configuration must list
+`LIVE_BASE_URL` in its `unicastBasePatterns`; the example declares
+`${LIVE_BASE_URL}`.
 
 ```sh
 npm install
 PORT=8082 EMISSION_DIR=example LIVE_BASE_URL=http://localhost:8082/live/ \
     SERVICES_BASE_URL=http://localhost:8082/services/ \
-    SIGNALING_BASE_URL=http://localhost:8082/signaling/ \
-    PUBLIC_SERVICES_BASE_URL=http://localhost:8082/services/ npm run dev
+    SIGNALING_BASE_URL=http://localhost:8082/signaling/ npm run dev
 ```
 
 ## Content preparation tool
@@ -153,8 +151,7 @@ application (an entry package) in the carousel, and a file whose
 docker build -t tv30-bcast-sim .
 docker run --rm -p 8082:8082 -e LIVE_BASE_URL=http://localhost:8082/live/ \
     -e SERVICES_BASE_URL=http://localhost:8082/services/ \
-    -e SIGNALING_BASE_URL=http://localhost:8082/signaling/ \
-    -e PUBLIC_SERVICES_BASE_URL=http://localhost:8082/services/ tv30-bcast-sim
+    -e SIGNALING_BASE_URL=http://localhost:8082/signaling/ tv30-bcast-sim
 ```
 
 The image bundles `example/` as the default emission directory.
