@@ -122,7 +122,9 @@ export function buildUsbd(service: ServiceDeclaration): Usbd | null {
 // Only what ATSC A/331, A.3.3.2, defines: cyclePeriod, order and lastModified
 // go to the emission descriptor. The appContextIdList of a flow also has the
 // appContextId of each entry whose lctTSIRef lists it (ABNT NBR 25608, 10.1).
-export function buildStsid(carousel: CarouselDeclaration, application: ApplicationDeclaration | null): Stsid {
+// transferLengths has the size of each file, by contentLocation.
+export function buildStsid(carousel: CarouselDeclaration, application: ApplicationDeclaration | null,
+    transferLengths: Map<string, number>): Stsid {
     return {
         RS: [{
             LS: carousel.flows.map((flow) => ({
@@ -134,7 +136,7 @@ export function buildStsid(carousel: CarouselDeclaration, application: Applicati
                             appContextIdList: flowAppContextIds(flow, application),
                             fileTemplate: flow.fileTemplate,
                             filterCodes: flow.filterCodes,
-                            File: flow.files.map(stsidFile),
+                            File: flow.files.map((file) => stsidFile(file, transferLengths)),
                         },
                     },
                 },
@@ -179,11 +181,17 @@ function flowAppContextIds(flow: CarouselFlow, application: ApplicationDeclarati
     return ids.length === 0 ? undefined : ids;
 }
 
-function stsidFile(file: CarouselFlow['files'][number]): StsidFile {
+// Content-Length is the declared one, or else the size of the file.
+function stsidFile(file: CarouselFlow['files'][number], transferLengths: Map<string, number>): StsidFile {
+    const transferLength = transferLengths.get(file.contentLocation);
+    if (transferLength === undefined) {
+        throw new Error(`contentLocation '${file.contentLocation}' has no size`);
+    }
     return {
         'Content-Location': file.contentLocation,
         'Content-Type': file.contentType,
-        'Content-Length': file.contentLength,
+        'Content-Length': file.contentLength ?? transferLength,
+        'Transfer-Length': transferLength,
         appContextIdList: file.appContextIdList,
         filterCodes: file.filterCodes,
     };

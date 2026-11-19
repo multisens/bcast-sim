@@ -15,7 +15,7 @@ import {
     Bam, Bamt, EmissionDescriptor, MetadataUri, Slt, baldSchema, bamtSchema, emissionDescriptorSchema, prrdSchema,
     sltSchema, stsidSchema, svgSchema, usbdSchema,
 } from './fragments';
-import { PACKAGE_TYPE, packageLocations } from './entry-package';
+import { PACKAGE_TYPE, buildEntryPackage, packageLocations } from './entry-package';
 
 // Load of the emission declarations: reads canais/ and servicos/, checks each
 // declaration and the rules that cross them, builds the fragments and gives
@@ -86,6 +86,8 @@ type ServiceFiles = {
     sources: { service: string[]; bam: string[]; application: string[]; carousel: string[]; privacy: string[] };
     bam: Bam | null;
     appIcons: (string | undefined)[];
+    // Size of each file of the carousel, by contentLocation.
+    transferLengths: Map<string, number>;
 };
 
 type ChannelFile = {
@@ -101,6 +103,7 @@ const CAROUSEL_FILE = 'carrossel.json';
 const PRIVACY_FILE = 'privacidade.json';
 const FILES_DIR = 'arquivos';
 const LIVE_PATH = /^live\/([A-Za-z0-9._-]+)\//;
+const LIVE_INIT_FILE = 'init.mp4';
 const SERVICE_DIR_NAME = /^\d+$/;
 const MS_PER_SECOND = 1000;
 const LLS_VERSION_MODULO = 256;
@@ -242,7 +245,7 @@ function staticFragments(files: ServiceFiles): Map<StaticMetadataUri, { content:
         fragments.set('usbd', { content: usbdSchema.parse(usbd), sources: files.sources.service });
     }
     if (files.carousel !== null) {
-        fragments.set('stsid', { content: stsidSchema.parse(buildStsid(files.carousel, files.application)),
+        fragments.set('stsid', { content: stsidSchema.parse(buildStsid(files.carousel, files.application, files.transferLengths)),
             sources: [...files.sources.carousel, ...files.sources.application] });
     }
     if (files.application !== null) {
@@ -332,8 +335,10 @@ function readService(context: EmissionContext, dir: string, serviceId: number): 
 
     const streams = context.streamsOfService(String(serviceId));
     checkStreams(streams, declaration, context.liveBaseUrl);
+    let transferLengths = new Map<string, number>();
     if (carousel !== null) {
         checkCarousel(carousel, dir, streams);
+        transferLengths = carouselSizes(carousel, dir, streams);
     }
     if (application !== null) {
         checkApplication(application, carousel);
@@ -374,6 +379,7 @@ function readService(context: EmissionContext, dir: string, serviceId: number): 
         },
         bam,
         appIcons,
+        transferLengths,
     };
 }
 
@@ -436,6 +442,38 @@ function checkCarousel(carousel: CarouselDeclaration, dir: string, streams: Load
             }
         }
     }
+}
+
+// The size of each file of a checked carousel: the file under the files
+// folder, the entry package built from its folder, or the initialization
+// segment of a live stream.
+function carouselSizes(carousel: CarouselDeclaration, dir: string, streams: LoadedStream[]): Map<string, number> {
+    const sizes = new Map<string, number>();
+    for (const file of carousel.flows.flatMap((flow) => flow.files)) {
+        const location = file.contentLocation;
+        const live = LIVE_PATH.exec(location);
+        const filePath = path.join(dir, FILES_DIR, location);
+        if (live !== null) {
+            sizes.set(location, liveFileSize(location, live[1], streams));
+        } else if (isEntryPackage(file)) {
+            sizes.set(location, buildEntryPackage(filePath).body.length);
+        } else {
+            sizes.set(location, fs.statSync(filePath).size);
+        }
+    }
+    return sizes;
+}
+
+// Only the initialization segment of a stream with media is served as a
+// live file of the carousel.
+function liveFileSize(location: string, streamId: string, streams: LoadedStream[]): number {
+    const stream = streams.find((candidate) => candidate.declaration.streamId === streamId);
+    const media = stream?.media ?? null;
+    const isInit = location === `live/${streamId}/${LIVE_INIT_FILE}`;
+    if (media === null || !isInit) {
+        throw new Error(`contentLocation '${location}' is not the ${LIVE_INIT_FILE} of a stream with media`);
+    }
+    return fs.statSync(media.initPath).size;
 }
 
 // The broadcast entry, lctTSIRef and the STORED_* codes need the

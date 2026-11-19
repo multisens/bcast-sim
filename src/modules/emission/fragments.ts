@@ -137,10 +137,13 @@ export const usbdSchema = z.strictObject({
 
 // ATSC A/331, 7.1.4 (Table 7.4), A.3.2 (Table A.3.1) and A.3.3.2.3
 // (Tables A.3.3 and A.3.4). Only what the carousel declaration produces.
+// Transfer-Length in every File, so that no @maxTransportSize is needed
+// (ATSC A/331, A.3.3.2.3).
 const fileSchema = z.strictObject({
     'Content-Location': relativeUriSchema,
     'Content-Type': z.string().min(1),
-    'Content-Length': z.int().nonnegative().optional(),
+    'Content-Length': z.int().nonnegative(),
+    'Transfer-Length': z.int().nonnegative(),
     appContextIdList: z.array(urnSchema).min(1).optional(),
     filterCodes: z.array(unsignedIntSchema).min(1).optional(),
 });

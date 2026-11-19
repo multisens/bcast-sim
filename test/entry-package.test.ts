@@ -11,6 +11,7 @@ import {
 
 const PACKAGE_LOCATION = 'app.pkg';
 const OTHER_CONTEXT_ID = 'urn:sbtvd:app:1001:other';
+const LIVE_INIT_LOCATION = 'live/video/init.mp4';
 
 test('an entry package is the files of its folder, a part per file with a relative Content-Location', () => {
     const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'pkg-')), PACKAGE_LOCATION);
@@ -60,4 +61,36 @@ test('the S-TSID adds the appContextId of each entry to the flows of its lctTSIR
     const stsid = stsidSchema.parse(service?.fragments.get('stsid')?.content);
     const lists = stsid.RS[0].LS.map((flow) => flow.SrcFlow.EFDT['FDT-Instance'].appContextIdList);
     assert.deepEqual(lists, [[APP_CONTEXT_ID, OTHER_CONTEXT_ID], [OTHER_CONTEXT_ID]]);
+});
+
+test('every File of the S-TSID has the size of its file as Transfer-Length (ATSC A/331, A.3.3.2.3)', () => {
+    const emissionDir = writeEmission();
+    const serviceDir = serviceDirOf(emissionDir);
+    const carousel = carouselDeclaration();
+    const flows = carousel.flows as Record<string, unknown>[];
+    (flows[0].files as Record<string, unknown>[]).push({ contentLocation: PACKAGE_LOCATION,
+        contentType: 'multipart/related' });
+    writeJson(path.join(serviceDir, 'carrossel.json'), carousel, 1);
+    const packageDir = path.join(serviceDir, 'arquivos', PACKAGE_LOCATION);
+    fs.mkdirSync(packageDir);
+    fs.writeFileSync(path.join(packageDir, 'index.html'), '<p>ola</p>');
+
+    const service = load(emissionDir).load.services.get(SERVICE_ID);
+    const stsid = stsidSchema.parse(service?.fragments.get('stsid')?.content);
+    const files = stsid.RS[0].LS.flatMap((flow) => flow.SrcFlow.EFDT['FDT-Instance'].File);
+    const sizeOf = (location: string): number => {
+        if (location === PACKAGE_LOCATION) {
+            return buildEntryPackage(packageDir).body.length;
+        }
+        if (location === LIVE_INIT_LOCATION) {
+            return fs.statSync(path.join(serviceDir, 'segmentos', 'video', 'init.mp4')).size;
+        }
+        return fs.statSync(path.join(serviceDir, 'arquivos', location)).size;
+    };
+    for (const file of files) {
+        const location = file['Content-Location'];
+        assert.equal(file['Transfer-Length'], sizeOf(location), location);
+        assert.equal(file['Content-Length'], sizeOf(location), location);
+    }
+    assert.ok(files.some((file) => file['Content-Location'] === LIVE_INIT_LOCATION));
 });
