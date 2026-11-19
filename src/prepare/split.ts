@@ -1,7 +1,7 @@
 import { InitInfo, readBoxes, readInit, readSegment, shiftSegment } from '../media';
 
 // Split of a fragmented MP4 into the initialization segment and one media
-// segment per fragment, with the decode times shifted (8.3, steps 2 and 3).
+// segment per fragment, with the decode times shifted.
 
 export type SplitResult = {
     init: Buffer;

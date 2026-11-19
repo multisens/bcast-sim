@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 import { createSignalingHandlers } from './controller';
 
-// Signaling routes of the emission side, under <sinal> (6.2).
+// Signaling routes of the emission side, under <sinal>.
 
 export { SlsPackage, SlsResult, emissionDescriptor, llsResponse, slsPackage } from './service';
 

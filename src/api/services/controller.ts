@@ -3,8 +3,8 @@ import logger from '../../logger';
 import path from 'path';
 import { EntryPackage, buildEntryPackage, filesDirOfLoaded, getService } from '../../modules/emission';
 
-// Handler of the files of a service, under <emissao>/{serviceId} (2.3); an
-// entry package of the carousel is built from its folder (3.8).
+// Handler of the files of a service, under <emissao>/{serviceId}; an entry
+// package of the carousel is built from its folder.
 
 type Handler = (req: Request, res: Response) => void;
 

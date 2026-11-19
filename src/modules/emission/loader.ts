@@ -17,10 +17,10 @@ import {
 } from './fragments';
 import { PACKAGE_TYPE, packageLocations } from './entry-package';
 
-// Load of the emission declarations (3.2 to 3.6, 3.8): reads canais/ and
-// servicos/, checks each declaration and the rules that cross them, builds
-// the fragments and gives each one its version (6.2). What fails a check is
-// refused and logged; the rest is served.
+// Load of the emission declarations: reads canais/ and servicos/, checks each
+// declaration and the rules that cross them, builds the fragments and gives
+// each one its version. What fails a check is refused and logged; the rest is
+// served.
 
 export type Refusal = {
     source: string;
@@ -52,9 +52,9 @@ export type LoadedService = {
     bsid: number;
     fragments: Map<StaticMetadataUri, Versioned<unknown>>;
     descriptor: EmissionDescriptor | null;
-    // contentLocation of each entry package of the carousel (3.8).
+    // contentLocation of each entry package of the carousel.
     entryPackages: Set<string>;
-    // The carousel has a flow with a fileTemplate under live/ (DP22).
+    // The carousel has a flow with a fileTemplate under live/.
     carriesStreams: boolean;
 };
 
@@ -200,9 +200,8 @@ export function loadEmission(context: EmissionContext, previous: Map<string, Ver
 }
 
 // A version that changes only when the content changes, and grows: the
-// modification time of the sources, in seconds (6.2), or the previous
-// version plus one when that time does not grow. The LLS_table_version wraps
-// at 256.
+// modification time of the sources, in seconds, or the previous version plus
+// one when that time does not grow. The LLS_table_version wraps at 256.
 export function nextVersion(previous: VersionRecord | undefined, content: string, candidate: number,
     modulo: number | null): VersionRecord {
     if (previous !== undefined && previous.content === content) {
@@ -230,7 +229,7 @@ function carriesStreams(carousel: CarouselDeclaration | null): boolean {
         && LIVE_PATH.test(flow.fileTemplate));
 }
 
-// DP18: a file of type multipart/related is an entry package, built from the
+// A file of type multipart/related is an entry package, built from the
 // folder of the same name.
 function isEntryPackage(file: CarouselFlow['files'][number]): boolean {
     return file.contentType === PACKAGE_TYPE;
@@ -395,7 +394,7 @@ function checkStreams(streams: LoadedStream[], declaration: ServiceDeclaration, 
     if (streams.some((stream) => stream.declaration.availabilityStartTime !== epoch)) {
         throw new Error('the streams of a service must share availabilityStartTime');
     }
-    // 3.3: in the Broadband configuration, a unicast pattern equals MPD.BaseURL.
+    // In the Broadband configuration, a unicast pattern equals MPD.BaseURL.
     const unicast = declaration.delivery.unicastBasePatterns ?? [];
     if (declaration.delivery.configuration === 'Broadband' && !unicast.includes(liveBaseUrl)) {
         throw new Error(`Broadband configuration requires '${liveBaseUrl}' (MPD.BaseURL) in unicastBasePatterns`);
@@ -439,7 +438,7 @@ function checkCarousel(carousel: CarouselDeclaration, dir: string, streams: Load
     }
 }
 
-// 3.4: the broadcast entry, lctTSIRef and the STORED_* codes need the
+// The broadcast entry, lctTSIRef and the STORED_* codes need the
 // carousel; the entry package is one of its files.
 function checkApplication(application: ApplicationDeclaration, carousel: CarouselDeclaration | null): void {
     for (const entry of application) {

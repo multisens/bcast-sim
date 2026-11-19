@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { diskPosition, isAvailable, lastAvailable, playlistFirst, secondsUntilFirstSegment } from '../src/api/live/timeline';
 
-// The example of 4.7: D = 360000 (4 s at 90 kHz), N = 120, k = 5.
+// The example: D = 360000 (4 s at 90 kHz), N = 120, k = 5.
 const EPOCH_MS = Date.parse('2026-01-01T00:00:00Z');
 const TIMELINE = {
     availabilityStartMs: EPOCH_MS,

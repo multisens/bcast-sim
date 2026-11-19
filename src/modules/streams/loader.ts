@@ -2,14 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { CheckedMedia, StreamDeclaration, checkStream, streamDeclarationSchema } from '../../media';
 
-// Load of the stream declarations of every service (4.2, "Carga de um
-// fluxo"), and the rule for a changed declaration ("Mudança de declaração").
+// Load of the stream declarations of every service; a declaration whose media
+// changed without a new availabilityStartTime keeps the previous one.
 
 export type LoadedStream = {
     serviceId: string;
     declaration: StreamDeclaration;
     availabilityStartMs: number;
-    // Null when the declaration brings a ready-made manifest (4.8).
+    // Null when the declaration brings a ready-made manifest.
     media: CheckedMedia | null;
     manifestPaths: { mpd: string | null; hls: string | null };
 };
@@ -139,7 +139,8 @@ function changedWithoutNewEpoch(before: LoadedStream, after: LoadedStream): bool
     return sameEpoch && beforeFingerprint !== afterFingerprint;
 }
 
-// 4.2, step 10.
+// A video stream with audioStreamId needs that audio stream loaded in the
+// same service, with the same availabilityStartTime and lap duration.
 function audioPairingProblem(stream: LoadedStream, streams: Map<string, LoadedStream>): string | null {
     const audioStreamId = stream.declaration.audioStreamId;
     if (audioStreamId === undefined) {

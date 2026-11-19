@@ -1,5 +1,5 @@
-// Choice of the lap and segment durations (8.2). Durations are exact
-// fractions of a second.
+// Choice of the lap and segment durations. Durations are exact fractions of a
+// second.
 
 export type Rational = {
     num: number;
@@ -57,7 +57,7 @@ export function planDurations(input: DurationInput): DurationPlan {
 }
 
 // Whole seconds added to every decode time so that the first tfdt is at least
-// 2^32 in every timescale (8.3, step 2).
+// 2^32 in every timescale.
 export function decodeTimeOffsetSeconds(timescales: number[]): number {
     const smallest = Math.min(...timescales);
     return Math.ceil(TFDT_32_BIT_LIMIT / smallest);

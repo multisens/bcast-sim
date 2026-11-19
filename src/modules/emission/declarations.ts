@@ -5,9 +5,8 @@ import {
     serviceCategorySchema, unsignedByteSchema, unsignedIntSchema, unsignedShortSchema, urnSchema,
 } from './fragments';
 
-// Declarations written by the service author (3.2 to 3.6, and the PRRD of
-// 3.8): canais/{bsid}.json and servicos/{serviceId}/{servico, aplicacao,
-// carrossel, privacidade}.json.
+// Declarations written by the service author: canais/{bsid}.json and
+// servicos/{serviceId}/{servico, aplicacao, carrossel, privacidade}.json.
 
 const RELATIVE_PATH = /^(?![/.])(?!.*(^|\/)\.\.(\/|$))[A-Za-z0-9._/-]+$/;
 const MAX_LLS_CYCLE_PERIOD_MS = 5000;
@@ -82,7 +81,7 @@ export const serviceDeclarationSchema = z.strictObject({
     }
 });
 
-// 3.4: one entry per Entry Package. targetApplication is accepted and
+// The application declaration: one entry per Entry Package. targetApplication is accepted and
 // ignored.
 const applicationEntrySchema = z.strictObject({
     appContextId: urnSchema,
@@ -154,7 +153,7 @@ export const carouselDeclarationSchema = z.strictObject({
     flows: z.array(carouselFlowSchema).min(1),
 });
 
-// 3.8: the PRRD itself, in JSON.
+// The privacy declaration: the PRRD itself, in JSON.
 export const privacyDeclarationSchema = prrdSchema;
 
 export type ChannelDeclaration = z.infer<typeof channelDeclarationSchema>;

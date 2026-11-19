@@ -5,7 +5,7 @@ import { getStream } from '../../modules/streams';
 import { SegmentResult, masterPlaylist, mediaPlaylist, mpd, segment, timelineOf } from './service';
 import { secondsUntilFirstSegment } from './timeline';
 
-// Handlers of the live simulator routes (4.3).
+// Handlers of the live simulator routes.
 
 type Handler = (req: Request, res: Response) => void;
 

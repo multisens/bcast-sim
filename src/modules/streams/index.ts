@@ -1,8 +1,8 @@
 import logger from '../../logger';
 import { LoadResult, LoadedStream, loadStreams } from './loader';
 
-// Registry of the loaded streams (4.2). The emission module reloads it
-// whenever a file under the emission directory changes.
+// Registry of the loaded streams. The emission module reloads it whenever a
+// file under the emission directory changes.
 
 export { LoadResult, LoadedStream, Refusal, loadStreams } from './loader';
 

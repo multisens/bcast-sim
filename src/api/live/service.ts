@@ -3,9 +3,9 @@ import { CheckedMedia, Representation, shiftSegment } from '../../media';
 import { LoadedStream } from '../../modules/streams';
 import { TimelineInput, availableFirst, diskPosition, isAvailable, lastAvailable, playlistFirst } from './timeline';
 
-// Responses of the live simulator: HLS media and master playlists (4.4), MPD
-// (4.5), for one stream or for all the streams of a service, and segments
-// (4.6). Each one is a function of the declaration, the files and the clock.
+// Responses of the live simulator: HLS media and master playlists, MPD, for one
+// stream or for all the streams of a service, and segments. Each one is a
+// function of the declaration, the files and the clock.
 
 export type LiveMedia = {
     stream: LoadedStream;
@@ -91,9 +91,9 @@ export function masterPlaylist(video: LoadedStream, audio: LoadedStream): string
 }
 
 // Null when some stream has no segment available yet. The timeline of each
-// stream lists exactly its available segments (4.7), so the document
-// changes with each new segment of any stream. All streams share the
-// availabilityStartTime of the first one, which the loader enforces.
+// stream lists exactly its available segments, so the document changes with
+// each new segment of any stream. All streams share the availabilityStartTime
+// of the first one, which the loader enforces.
 export function mpd(streams: LiveMedia[], liveBaseUrl: string, nowMs: number): MpdDocument | null {
     const windows: StreamWindow[] = [];
     for (const live of streams) {

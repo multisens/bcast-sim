@@ -4,8 +4,8 @@ import path from 'path';
 import { Patch, readInit, readSegment } from './mp4';
 import { StreamDeclaration } from './schema';
 
-// Load checks of a stream declaration against its files (4.2, steps 4 to 9),
-// shared by the preparation tool (8.3, step 7) and the live simulator.
+// Load checks of a stream declaration against its files, shared by the
+// preparation tool and the live simulator.
 
 export type CheckedMedia = {
     segmentDuration: number;
@@ -93,7 +93,7 @@ export function checkStream(declaration: StreamDeclaration, mediaDir: string): C
     };
 }
 
-// D = nominalDuration × timescale (4.2, step 4).
+// D = nominalDuration × timescale.
 export function segmentDurationUnits(declaration: StreamDeclaration): number {
     const exact = declaration.nominalDuration * declaration.timescale;
     const rounded = Math.round(exact);

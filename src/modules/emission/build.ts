@@ -4,8 +4,8 @@ import {
 } from './declarations';
 import { Bald, Bam, Bamt, EmissionDescriptor, Prrd, Slt, SltService, Stsid, StsidFile, Usbd } from './fragments';
 
-// Declarations to fragments (3.8). The icons are read by the caller and
-// passed as SVG text.
+// Declarations to fragments. The icons are read by the caller and passed as SVG
+// text.
 
 export type Icons = {
     appIcon: string;
@@ -19,7 +19,7 @@ export type EmissionBases = {
     signalingBaseUrl: string;
 };
 
-// 7.1: the Service element of the SLT.
+// The Service element of the SLT.
 export function buildSltService(service: ServiceDeclaration): SltService {
     const slt = service.slt;
     const svcInetUrl = slt.svcInetUrl?.map((entry) => ({ urlType: entry.urlType, value: entry.url }));
@@ -48,7 +48,7 @@ export function buildSlt(channel: ChannelDeclaration, services: ServiceDeclarati
     };
 }
 
-// ecgAppDeepLink is accepted and ignored (3.3).
+// ecgAppDeepLink is accepted and ignored.
 export function buildBam(service: ServiceDeclaration, icons: Icons): Bam | null {
     const bam = service.bam;
     if (bam === undefined) {
@@ -79,8 +79,8 @@ export function buildBamt(channel: ChannelDeclaration, bams: Bam[]): Bamt | null
     };
 }
 
-// targetApplication is accepted and ignored (3.4). appIcons holds the SVG
-// text of each entry's icon, in the order of the declaration.
+// targetApplication is accepted and ignored. appIcons holds the SVG text of
+// each entry's icon, in the order of the declaration.
 export function buildBald(application: ApplicationDeclaration, appIcons: (string | undefined)[]): Bald {
     return {
         EntryPackage: application.map((entry, index) => ({
@@ -101,7 +101,7 @@ export function buildBald(application: ApplicationDeclaration, appIcons: (string
     };
 }
 
-// Null when there is no broadcastBasePatterns (3.8).
+// Null when there is no broadcastBasePatterns.
 export function buildUsbd(service: ServiceDeclaration): Usbd | null {
     const broadcast = service.delivery.broadcastBasePatterns;
     if (broadcast === undefined) {
@@ -119,10 +119,9 @@ export function buildUsbd(service: ServiceDeclaration): Usbd | null {
     };
 }
 
-// Only what ATSC A/331, A.3.3.2, defines: cyclePeriod, order and
-// lastModified go to the emission descriptor (3.6). The appContextIdList of
-// a flow also has the appContextId of each entry whose lctTSIRef lists it
-// (ABNT NBR 25608, 10.1).
+// Only what ATSC A/331, A.3.3.2, defines: cyclePeriod, order and lastModified
+// go to the emission descriptor. The appContextIdList of a flow also has the
+// appContextId of each entry whose lctTSIRef lists it (ABNT NBR 25608, 10.1).
 export function buildStsid(carousel: CarouselDeclaration, application: ApplicationDeclaration | null): Stsid {
     return {
         RS: [{

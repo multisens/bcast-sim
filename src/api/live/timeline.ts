@@ -1,4 +1,4 @@
-// Window arithmetic of the live simulator (4.7). Segment numbers start at 1.
+// Window arithmetic of the live simulator. Segment numbers start at 1.
 
 export type TimelineInput = {
     availabilityStartMs: number;

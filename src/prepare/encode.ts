@@ -2,8 +2,8 @@ import { execFileSync } from 'child_process';
 import { z } from 'zod';
 import { ComponentPlan, Rational, parseRational, toSeconds } from './durations';
 
-// Source probing and encoding of each component into a fragmented MP4 with
-// one fragment per segment (8.3, steps 1 and 2), through ffprobe and ffmpeg.
+// Source probing and encoding of each component into a fragmented MP4 with one
+// fragment per segment, through ffprobe and ffmpeg.
 
 export type SourceInfo = {
     videoFrameRate: Rational;

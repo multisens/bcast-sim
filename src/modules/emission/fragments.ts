@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 // Declared schemas of the signaling the emission side serves: the LLS tables
 // SLT and BAMT, the SLS fragments BALD, USBD, S-TSID and PRRD, the metadata
-// envelope and the emission descriptor (3.7, 3.8, 6.2). Each fragment is the
-// content of its root element in JSON.
+// envelope and the emission descriptor. Each fragment is the content of its
+// root element in JSON.
 
 const URN = /^urn:[A-Za-z0-9][A-Za-z0-9-]{0,31}:\S+$/;
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -47,7 +47,7 @@ export const svgSchema = z.string()
         { message: `SVG larger than ${MAX_ICON_BYTES} bytes` });
 
 // ATSC A/331, 6.3, Table 6.2, as amended by ABNT NBR 25602, 8.1; bandwidth,
-// mainAvOverTheAir and receptionQuality are testbed additions (7.1).
+// mainAvOverTheAir and receptionQuality are testbed additions.
 export const sltSchema = z.strictObject({
     bsid: z.array(unsignedShortSchema).min(1),
     bandwidth: bandwidthSchema,
@@ -250,8 +250,8 @@ export const emissionDescriptorSchema = z.strictObject({
     })).min(1),
 });
 
-// 6.2, GET <sinal>/lls. llsCyclePeriod tells the acquisition the cadence of
-// the scan (6.3).
+// The answer of GET <sinal>/lls. llsCyclePeriod tells the acquisition the cadence of the
+// scan.
 export const llsResponseSchema = z.strictObject({
     rfChannels: z.array(z.strictObject({
         bsid: unsignedShortSchema,
@@ -275,7 +275,7 @@ export const llsResponseSchema = z.strictObject({
     })),
 });
 
-// 6.2, first part of GET <sinal>/sls/{serviceId}.
+// The envelope, first part of GET <sinal>/sls/{serviceId}.
 export const metadataUriSchema = z.enum(['usbd', 'stsid', 'mpd', 'bald', 'prrd']);
 
 export const envelopeSchema = z.strictObject({

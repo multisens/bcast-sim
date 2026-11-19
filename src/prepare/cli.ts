@@ -8,8 +8,8 @@ import { ComponentPlan, DurationPlan, Rational, decodeTimeOffsetSeconds, planDur
 import { encodeAudio, encodeVideo, probeSource } from './encode';
 import { splitFragmented } from './split';
 
-// Content preparation tool (Section 8): one source file in, one video and one
-// audio stream out, each with its segments and its stream declaration.
+// Content preparation tool: one source file in, one video and one audio stream
+// out, each with its segments and its stream declaration.
 
 type Options = {
     source: string;
@@ -79,7 +79,8 @@ function main(): void {
     }
 }
 
-// Steps 3 to 7 of 8.3 for one component.
+// Splits, names and checks the segments of one component and writes its
+// stream declaration.
 function prepareComponent(encodedFile: string, workDir: string, streamId: string, plan: ComponentPlan,
     offsetSeconds: number, options: Options, frameRate: Rational, audioStreamId: string | null): Prepared {
     const decodeTimeOffset = BigInt(offsetSeconds) * BigInt(plan.timescale);
@@ -164,7 +165,7 @@ function frameRateText(rate: Rational): string {
     return rate.den === 1 ? String(rate.num) : `${rate.num}/${rate.den}`;
 }
 
-// 8.2: the lap of every component of a service lasts the same in seconds.
+// The lap of every component of a service lasts the same in seconds.
 function checkSameLap(video: StreamDeclaration, audio: StreamDeclaration): void {
     const videoLap = BigInt(video.lapDuration) * BigInt(audio.timescale);
     const audioLap = BigInt(audio.lapDuration) * BigInt(video.timescale);

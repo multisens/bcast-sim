@@ -7,8 +7,8 @@ import {
 } from '../../modules/emission';
 import { LoadedStream } from '../../modules/streams';
 
-// Responses of the signaling routes (6.2): the LLS tables of the scan, the
-// SLS package of the Signaling Server and the emission descriptor.
+// Responses of the signaling routes: the LLS tables of the scan, the SLS
+// package of the Signaling Server and the emission descriptor.
 
 export type SlsPackage = {
     contentType: string;
@@ -38,7 +38,7 @@ const BOUNDARY_HASH_LENGTH = 16;
 const MS_PER_SECOND = 1000;
 const PACKAGE_ORDER: MetadataUri[] = ['usbd', 'stsid', 'mpd', 'bald', 'prrd'];
 // MPD.BaseURL of a service whose carousel carries its streams: relative,
-// resolved against the object proxy (5.4, DP22).
+// resolved against the object proxy.
 const BROADCAST_LIVE_BASE = '/live/';
 
 export function llsResponse(channels: LoadedChannel[]): LlsResponse {

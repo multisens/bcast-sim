@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 import { getStream } from '../../modules/streams';
 import { createLiveHandlers } from './controller';
 
-// Routes of the live simulator, under <aovivo> (4.3). Mounted also under
+// Routes of the live simulator, under <aovivo>. Mounted also under
 // <emissao>/{serviceId}/live, where only the streams of that service answer.
 
 export { LiveMedia, MpdDocument, mpd } from './service';

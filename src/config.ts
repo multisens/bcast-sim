@@ -6,7 +6,7 @@ import fs from 'fs';
 
 export type Config = {
     port: number;
-    // Holds canais/ and servicos/ (3.1).
+    // Holds canais/ and servicos/.
     emissionDir: string;
     // <aovivo>, as players reach it; the MPD.BaseURL.
     liveBaseUrl: URL;

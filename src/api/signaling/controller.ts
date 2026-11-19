@@ -3,7 +3,7 @@ import { getChannels, getService } from '../../modules/emission';
 import { streamsOfService } from '../../modules/streams';
 import { emissionDescriptor, llsResponse, slsPackage } from './service';
 
-// Handlers of the signaling routes, under <sinal> (6.2).
+// Handlers of the signaling routes, under <sinal>.
 
 type Handler = (req: Request, res: Response) => void;
 

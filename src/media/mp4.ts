@@ -169,7 +169,7 @@ export function readSegment(buf: Buffer, init: InitInfo): SegmentInfo {
 }
 
 // Returns a copy of the segment with the time fields shifted by timeDelta and
-// the sequence numbers by sequenceDelta (4.6, step 4).
+// the sequence numbers by sequenceDelta.
 export function shiftSegment(buf: Buffer, patches: Patch[], timeDelta: bigint, sequenceDelta: number): Buffer {
     const copy = Buffer.from(buf);
     for (const patch of patches) {
